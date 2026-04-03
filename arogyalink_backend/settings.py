@@ -27,9 +27,7 @@ def load_env_file(env_path):
             continue
 
         key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip().strip('"').strip("'")
-        os.environ.setdefault(key, value)
+        os.environ[key.strip()] = value.strip().strip('"').strip("'")
 
 
 load_env_file(BASE_DIR / ".env")
@@ -180,7 +178,6 @@ EMAIL_BACKEND = os.environ.get(
     if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD
     else "django.core.mail.backends.console.EmailBackend",
 )
-
 # For Gmail use an App Password and set these environment variables:
 # EMAIL_HOST_USER=your_gmail_address@gmail.com
 # EMAIL_HOST_PASSWORD=your_app_password

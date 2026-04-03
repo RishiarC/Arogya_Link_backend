@@ -118,6 +118,11 @@ EMAIL_HOST_USER=yourgmail@gmail.com
 EMAIL_HOST_PASSWORD=your_16_char_gmail_app_password
 DEFAULT_FROM_EMAIL=ArogyaLink <yourgmail@gmail.com>
 OTP_ECHO_TO_CONSOLE=True
+FAST2SMS_API_KEY=your_fast2sms_api_key
+FAST2SMS_ROUTE=q
+FAST2SMS_LANGUAGE=english
+FAST2SMS_FLASH=0
+FAST2SMS_TIMEOUT_SECONDS=15
 ```
 
 ### Important Environment Variables
@@ -136,6 +141,11 @@ OTP_ECHO_TO_CONSOLE=True
 | `EMAIL_HOST_PASSWORD` | Gmail App Password |
 | `DEFAULT_FROM_EMAIL` | Sender display address |
 | `OTP_ECHO_TO_CONSOLE` | Also print OTP in terminal |
+| `FAST2SMS_API_KEY` | Fast2SMS authorization key for backend emergency SMS |
+| `FAST2SMS_ROUTE` | Fast2SMS route, default `q` for Quick SMS |
+| `FAST2SMS_LANGUAGE` | Fast2SMS language, default `english` |
+| `FAST2SMS_FLASH` | Fast2SMS flash flag, usually `0` |
+| `FAST2SMS_TIMEOUT_SECONDS` | Timeout for Fast2SMS API calls |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated allowed origins |
 
 ## Local Setup
@@ -307,11 +317,26 @@ Router path:
 - `PUT /api/users/profile/{id}/`
 - `PATCH /api/users/profile/{id}/`
 - `DELETE /api/users/profile/{id}/`
+- `PATCH /api/users/profile/device-state/`
+- `POST /api/users/profile/device-state/`
 
 Notes:
 
 - `GET /api/users/profile/` returns the logged-in user's profile
 - Profile is linked one-to-one with the authenticated user
+
+Device-state request body example:
+
+```json
+{
+  "location_permission_granted": true,
+  "latitude": 28.6139,
+  "longitude": 77.209,
+  "location_timestamp": "2026-04-03T10:15:00Z"
+}
+```
+
+Use this endpoint from the web app right after GPS permission is granted, and whenever live location changes.
 
 ## Health APIs
 
@@ -375,9 +400,16 @@ Request body example:
 {
   "name": "John Doe",
   "relation": "Brother",
-  "phone_number": "9876543210"
+  "phone_number": "9876543210",
+  "priority": 1
 }
 ```
+
+Rules:
+
+- Up to 5 emergency contacts per user
+- Lower `priority` means higher urgency
+- The contact with the lowest priority number is used as the auto-dial target
 
 ### Reminders
 
@@ -437,7 +469,30 @@ Critical response may also include:
 
 - `emergency_alert_sent_to`
 - `emergency_payload`
+- `sms_targets`
+- `sms_message`
+- `alert_repeat`
+- `delivery_channels`
+- `dial_action`
+- `client_actions`
+- `client_permissions`
+- `missing_requirements`
 - `message`
+
+Important:
+
+- The backend prepares the emergency SMS text, `sms:` fallback links, current GPS payload, and the primary-contact `tel:` dial link.
+- The backend auto-sends SMS through Fast2SMS when `FAST2SMS_API_KEY` is configured.
+- SMS repeat scheduling is 1 minute while the prediction stays critical, and cooldown starts only after a successful Fast2SMS send.
+- The client only needs GPS permission and should use `dial_action` to open the dialer for the top-priority contact.
+- Fast2SMS wallet/auth can be verified separately before enabling live emergency delivery.
+
+Critical response now also includes:
+
+- `sms_delivery.attempted`
+- `sms_delivery.sent`
+- `sms_delivery.details`
+- `sms_delivery.error`
 
 ## Prediction Model
 

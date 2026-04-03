@@ -20,9 +20,13 @@ class Profile(models.Model):
 
     # Device and location data
     phone_number = models.CharField(max_length=15, blank=True, null=True)
+    phone_permission_granted = models.BooleanField(default=False)
+    location_permission_granted = models.BooleanField(default=False)
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
     location_timestamp = models.DateTimeField(blank=True, null=True)
+    critical_alert_active = models.BooleanField(default=False)
+    last_critical_message_sent_at = models.DateTimeField(blank=True, null=True)
 
     # Static Report/Historical Data
     cholesterol = models.IntegerField(default=200)

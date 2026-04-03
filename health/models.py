@@ -41,9 +41,19 @@ class EmergencyContact(models.Model):
     name = models.CharField(max_length=100)
     relation = models.CharField(max_length=50)
     phone_number = models.CharField(max_length=15)
+    priority = models.PositiveSmallIntegerField(default=1)
+
+    class Meta:
+        ordering = ('priority', 'id')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'priority'),
+                name='unique_emergency_contact_priority_per_user',
+            ),
+        ]
 
     def __str__(self):
-        return f"{self.name} ({self.relation}) - {self.user.username}"
+        return f"{self.name} ({self.relation}) - {self.user.username} [P{self.priority}]"
 
 class Reminder(models.Model):
     REMINDER_TYPE = (

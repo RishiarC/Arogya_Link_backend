@@ -1,4 +1,5 @@
 from rest_framework import status, viewsets, permissions
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
@@ -12,7 +13,7 @@ from django.utils import timezone
 import random
 
 from .models import Profile, EmailOTP
-from .serializers import UserSerializer, ProfileSerializer
+from .serializers import UserSerializer, ProfileSerializer, DeviceStateSerializer
 
 
 def generate_otp():
@@ -276,3 +277,14 @@ class ProfileViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(profile)
             return Response(serializer.data)
         return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['patch', 'post'], url_path='device-state')
+    def device_state(self, request, *args, **kwargs):
+        profile = self.get_queryset().first()
+        if not profile:
+            return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = DeviceStateSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
