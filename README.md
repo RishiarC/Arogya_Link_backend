@@ -253,7 +253,7 @@ Response includes:
 
 ### `POST /api/users/login/`
 
-Login using username or email plus password.
+Login using email plus password only.
 
 Request body:
 
